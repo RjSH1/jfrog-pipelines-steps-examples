@@ -17,6 +17,14 @@ resources:
     configuration:
       sourceArtifactory: {{ .Values.artifactory }}    
 
+  - name: artifactory_go_module_example
+    type: GitRepo
+    configuration:
+      path: RjSH1/artifactory-go-example
+      #branches:
+        #include: master
+      gitProvider: {{ .Values.gitProvider }}
+
 pipelines:
   - name: go_publish_binary_example
     steps:
@@ -44,6 +52,33 @@ pipelines:
             - name: build_go
           targetRepository: go-local
           integrations:
-            - name: myArtifactory
+            - name: {{ .Values.artifactory }}
           outputResources:
             - name: go_buildinfo
+
+      - name: publish_go_moduletest
+        type: GoPublishModule
+        execution:
+          onStart:
+            - go version
+        configuration:  
+#           environmentVariables: # optional
+#             JFROG_CLI_BUILD_NAME: "go_test"
+#             JFROG_CLI_BUILD_NUMBER: 2387
+          sourceLocation: .  # required
+          version: v0.0.0           # required
+          targetRepository: go-local
+          autoPublishBuildInfo: false
+          integrations:
+            - name: {{ .Values.artifactory }}
+#           runtime: 
+#             type: image
+#             image: 
+#               auto:
+#                 language: go
+#                 versions:
+#                   - "1.15.2-f2674"
+          inputResources:
+            - name: artifactory_go_module_example
+          #outputResources:
+            #- name: go_build_info_publish_moduletest
